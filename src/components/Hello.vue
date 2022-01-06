@@ -9,6 +9,7 @@
           <label><input type="checkbox" v-model="editable">Enable drag and drop</label>
         </div>
         <button type="button" class="btn btn-default" @click="orderList">Sort by original order</button>
+        <div>{{ "is dragging = "+isDragging }}</div>
       </div>
     </div>
 
@@ -24,24 +25,21 @@
       </draggable>
     </div>
 
-    <div class="col-md-3">
-      <draggable element="span" v-model="list2" v-bind="dragOptions" :move="onMove">
-        <transition-group name="no" class="list-group" tag="ul">
-          <li class="list-group-item" v-for="element in list2" :key="element.order">
-            <i :class="element.fixed? 'fa fa-anchor' : 'glyphicon glyphicon-pushpin'" @click=" element.fixed=! element.fixed" aria-hidden="true"></i>
-            {{element.name}}
-            <span class="badge">{{element.order}}</span>
-          </li>
-        </transition-group>
-      </draggable>
+    <div class="col-md-12 form-group form-group-lg panel panel-default" v-if="!hideDummyList">
+      <div class="panel-heading">
+        <h3 class="panel-title">{{ `This draggable will disappear in ${this.countdownSec} seconds` }}</h3>
+      </div>
+      <div class="panel-body">
+        <draggable class="list-group" tag="ul" v-model="dummyList" v-bind="dragOptions" :move="onMove" @start="isDragging=true" @end="isDragging=false">
+          <transition-group type="transition" :name="'dummy-list'">
+            <li class="list-group-item" v-for="element in dummyList" :key="element.index">
+              {{element.value}}
+            </li>
+          </transition-group>
+        </draggable>
+      </div>
     </div>
 
-    <div class="list-group col-md-3">
-      <pre>{{listString}}</pre>
-    </div>
-    <div class="list-group col-md-3">
-      <pre>{{list2String}}</pre>
-    </div>
   </div>
 </template>
 
@@ -65,6 +63,8 @@ export default {
   },
   data() {
     return {
+      dummyList: ["dummy1", "dummy2"].map((value, index) => ({ value, index })),
+      countdownMs: 5000,
       list: message.map((name, index) => {
         return { name, order: index + 1, fixed: false };
       }),
@@ -97,6 +97,12 @@ export default {
         ghostClass: "ghost"
       };
     },
+    countdownSec() {
+      return Math.ceil(this.countdownMs/1000);
+    },
+    hideDummyList() {
+      return this.countdownMs<=0;
+    },
     listString() {
       return JSON.stringify(this.list, null, 2);
     },
@@ -114,6 +120,9 @@ export default {
         this.delayedDragging = false;
       });
     }
+  },
+  mounted() {
+    setInterval(() => {this.countdownMs-=200}, 200);
   }
 };
 </script>
